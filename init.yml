@@ -1,0 +1,216 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    prefixes:
+      grandpa: '6772616e'
+      babe: '62616265'
+      im_online: '696d6f6e'
+      authority_discovery: '61756469'
+
+
+  tasks:
+    - name: Generate list of nodes names
+      set_fact:
+        validators_list: "{{ range(1, config.validators.validators_count + 1) | map('regex_replace', '(^.)', 'validator-\\1') | list }}"
+      tags:
+        - create
+        - destroy
+
+    - name: ==DEBUG== Show nodes names list for creating in DigitalOcean (validators_list)
+      debug:
+        msg: "{{ validators_list }}"
+      tags:
+        - debug
+      
+    - name: Create DigitalOcean droplets 
+      community.digitalocean.digital_ocean_droplet:
+        unique_name: yes
+        region: "{{ config.validators.droplet_region }}"
+        image: "{{ config.validators.droplet_image }}"
+        name: "{{ item }}"
+        size_id: "{{ config.validators.droplet_size_id }}"
+        state: present
+        ssh_keys: "{{ config.common.ssh_keys }}"
+      register: created_droplets
+      with_items: '{{ validators_list }}'
+      tags:
+        - create
+        - destroy
+
+    - digital_ocean_tag:
+        name: test_robonomics
+        resource_id: "{{ item.data.droplet.id }}"
+        state: present
+      loop: "{{ created_droplets.results }}"
+      tags:
+        - create
+        - destroy
+      
+
+    # - name: Add created hosts to dynamic inventory
+    #   add_host:
+    #     name: "{{ item.data.ip_address }}"
+    #     group: do_robonomics
+    #     do_id: "{{ item.data.droplet.id }}"
+    #   loop: "{{ created_droplets.results }}"
+
+
+    - name: Add new droplet to host group
+      local_action: add_host hostname={{ item.data.ip_address }} groupname=do_robonomics do_id={{ item.data.droplet.id }}
+      loop: "{{ created_droplets.results }}"
+      tags:
+        - create
+        - destroy
+  
+    - name: Wait for port 22 to become available
+      wait_for:
+        host: "{{ item.data.ip_address }}"
+        port: 22
+      with_items: "{{ created_droplets.results }}"
+      delegate_to: "{{ item.data.ip_address }}"
+      loop:
+        "{{ created_droplets.results }}"
+      tags:
+        - create
+        # - destroy
+
+    - name: ==CREATE== Create keys and folders structure for every node
+      include_tasks: tasks/generate_keystores.yml
+      loop: 
+        "{{ created_droplets.results }}"
+      loop_control:
+        loop_var: droplet
+      tags:
+        - create
+
+    - name: ==DEBUG== Nodes keys
+      debug:
+        msg: "{{ nodes_session_keys }}"
+      tags:
+        - debug
+
+    
+    - name: ==CREATE== Generate SPEC file
+      include_tasks: tasks/spec_generate.yml
+      tags:
+        - create
+
+
+###############################
+############ UPLOAD ###########
+###############################  
+- hosts: do_robonomics
+  user: root
+  gather_facts: false
+
+  tasks:
+    - name: Copy created node files to every node
+      copy:
+        src: data/uploads/nodes/{{ hostvars[inventory_hostname]['inventory_hostname'] }}/
+        dest: /root/.local/share/robonomics/chains/dev/
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+      tags:
+        - create
+
+    - name: Copy BIN file to every node
+      copy:
+        src: data/uploads/common/robonomics
+        dest: /usr/bin/robonomics
+        owner: root
+        group: root
+        mode: u=rwx,g=rx,o=rx
+        backup: yes
+      tags:
+        - create
+
+    - name: Copy service file to every node
+      copy:
+        src: data/uploads/common/robonomics.service
+        dest: /etc/systemd/system/robonomics.service
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+      tags:
+        - create
+
+    - name: Creates directory /etc/substrate
+      file:
+        path: /etc/substrate
+        state: directory
+      tags:
+        - create
+
+    - name: Copy spec file to every node
+      copy:
+        src: data/uploads/common/spec.json
+        dest: /etc/substrate/spec.json
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+      tags:
+        - create
+
+    - name: Enable service robonomics.service
+      systemd:
+        name: robonomics.service
+        enabled: yes
+      tags:
+        - create
+
+    - name: Start service robonomics.service
+      systemd:
+        name: robonomics.service
+        state: started
+      tags:
+        - create
+###############################
+########### /UPLOAD ###########
+###############################
+
+
+###############################
+########### DESTROY ###########
+############################### 
+- hosts: do_robonomics
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Remove all test nodes from DigitalOcean
+      community.digitalocean.digital_ocean_droplet:
+        name: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
+        id: "{{ hostvars[inventory_hostname]['do_id'] }}"
+        state: absent
+      tags:
+        - destroy
+
+    - name: Clean upload/nodes path
+      shell: /bin/rm -rf data/uploads/nodes/*
+      tags:
+        - destroy
+
+    - name: Clean local/keys/validators path
+      shell: /bin/rm -rf data/local/keys/validators/*
+      tags:
+        - destroy
+
+    - name: Clean local/keys/sudo path
+      shell: /bin/rm -rf data/local/keys/sudo/*
+      tags:
+        - destroy
+
+    - name: Clean data/uploads/common path
+      shell: /bin/rm -rf data/uploads/common/*
+      tags:
+        - destroy
+###############################
+########### /DESTROY ##########
+###############################

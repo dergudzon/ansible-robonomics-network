@@ -1,0 +1,14 @@
+[Unit]
+Description=robonomics
+After=network.target
+
+[Service]
+User=root
+Group=root
+Type=users
+WorkingDirectory=/root
+Restart=on-failure
+ExecStart=/usr/bin/robonomics  --chain /etc/substrate/spec.json --name ${HOSTNAME} --validator
+
+[Install]
+WantedBy=multi-user.target

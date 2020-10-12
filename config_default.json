@@ -1,0 +1,13 @@
+{
+    "config": {
+        "common": {
+            "ssh_keys": []
+        },
+        "validators": {
+            "validators_count": 3,
+            "droplet_image": "ubuntu-20-04-x64",
+            "droplet_region": "ams3",
+            "droplet_size_id": "s-1vcpu-1gb"
+        }
+    }
+}
