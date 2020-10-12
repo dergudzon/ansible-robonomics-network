@@ -3,7 +3,7 @@
 ######### bootNodes  #########
 ##############################
 - name: Create keys for bootNodes URLs
-  shell: assets/bin/subkey inspect-node-key data/uploads/nodes/"{{ item.data.ip_address }}"/network/secret_ed25519
+  shell: data/local/subkey inspect-node-key data/uploads/nodes/"{{ item.data.ip_address }}"/network/secret_ed25519
   loop:
     "{{ created_droplets.results }}"
   register: bootNodes
@@ -23,9 +23,17 @@
 # ###### palletBalances  #######
 # ##############################
 - name: Create validators keys
-  shell: assets/bin/subkey generate
+  shell: data/local/subkey generate
   with_sequence: count={{ created_droplets.results|length + 1}}
   register: validators
+  tags:
+    - create
+
+- name: ==VALIDATORS KEYS== Create VALIDATORS KEYS directory if it does not exist
+  file:
+    path: data/local/keys/validators
+    state: directory
+    mode: "0755"
   tags:
     - create
 
@@ -37,6 +45,14 @@
   tags:
     - create
   with_items: '{{ validators.results[:-1] }}'
+
+- name: ==SUDO KEYS== Create SUDO KEYS directory if it does not exist
+  file:
+    path: data/local/keys/sudo
+    state: directory
+    mode: "0755"
+  tags:
+    - create
 
 - name: Create SUDO key file
   copy:
@@ -66,21 +82,11 @@
 ###############################
 
 
-- name: Template a file to data/uploads/spec.json
+
+- name: Template a file to data/uploads/common/spec.json
   template:
     src: j2_templates/spec.json.j2
     dest: data/uploads/common/spec.json
-  tags:
-    - create
-
-# - name: spec_orig.json TO RAW 
-#   shell: assets/bin/robonomics build-spec --chain=data/uploads/common/spec_orig.json --raw --disable-default-bootnode > data/uploads/common/spec.json
-#   register: results
-#   tags:
-#     - create
-
-- name: Copy robonomics BIN to uploads/common
-  copy: src=assets/bin/robonomics dest=data/uploads/common/robonomics
   tags:
     - create
 

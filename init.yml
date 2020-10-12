@@ -48,15 +48,6 @@
       tags:
         - create
         - destroy
-      
-
-    # - name: Add created hosts to dynamic inventory
-    #   add_host:
-    #     name: "{{ item.data.ip_address }}"
-    #     group: do_robonomics
-    #     do_id: "{{ item.data.droplet.id }}"
-    #   loop: "{{ created_droplets.results }}"
-
 
     - name: Add new droplet to host group
       local_action: add_host hostname={{ item.data.ip_address }} groupname=do_robonomics do_id={{ item.data.droplet.id }}
@@ -77,6 +68,11 @@
         - create
         # - destroy
 
+    - name: DOWNLOAD latest binaries
+      include_tasks: tasks/download_latest_binaries.yml
+      tags:
+        - create
+        
     - name: ==CREATE== Create keys and folders structure for every node
       include_tasks: tasks/generate_keystores.yml
       loop: 
@@ -192,25 +188,30 @@
       tags:
         - destroy
 
-    - name: Clean upload/nodes path
-      shell: /bin/rm -rf data/uploads/nodes/*
+    - name: Remove data folder
+      shell: /bin/rm -rf data
       tags:
-        - destroy
+        - destroy        
 
-    - name: Clean local/keys/validators path
-      shell: /bin/rm -rf data/local/keys/validators/*
-      tags:
-        - destroy
+    # - name: Clean upload/nodes path
+    #   shell: /bin/rm -rf data/uploads/nodes/*
+    #   tags:
+    #     - destroy
 
-    - name: Clean local/keys/sudo path
-      shell: /bin/rm -rf data/local/keys/sudo/*
-      tags:
-        - destroy
+    # - name: Clean local/keys/validators path
+    #   shell: /bin/rm -rf data/local/keys/validators/*
+    #   tags:
+    #     - destroy
 
-    - name: Clean data/uploads/common path
-      shell: /bin/rm -rf data/uploads/common/*
-      tags:
-        - destroy
+    # - name: Clean local/keys/sudo path
+    #   shell: /bin/rm -rf data/local/keys/sudo/*
+    #   tags:
+    #     - destroy
+
+    # - name: Clean data/uploads/common path
+    #   shell: /bin/rm -rf data/uploads/common/*
+    #   tags:
+    #     - destroy
 ###############################
 ########### /DESTROY ##########
 ###############################

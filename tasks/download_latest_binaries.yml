@@ -1,0 +1,109 @@
+---
+- uri:                                                               
+    url: https://api.github.com/repos/airalab/robonomics/releases/latest
+    return_content: true                                             
+  register: json_reponse  
+  tags:
+    - create                                    
+
+- debug:
+    msg: "{{ json_reponse.json.assets }}"
+  tags:
+    - debug_ext
+
+- set_fact:
+    robonomics_link: |
+      {% set r = [] %}
+      {% for a in json_reponse.json.assets -%}
+      {% if 'robonomics-ubuntu' in a.browser_download_url -%}
+        {% set r = r.append(a.browser_download_url) -%}
+      {% endif -%}
+      {% endfor -%}  
+      {{ r }}
+    subkey_link: |
+      {% set r = [] %}
+      {% for a in json_reponse.json.assets -%}
+        {% if 'subkey-ubuntu' in a.browser_download_url -%}
+          {% set r = r.append(a.browser_download_url) -%}
+        {% endif -%}
+      {% endfor -%}  
+      {{ r }}
+  tags:
+    - create
+
+- debug:
+    msg: "{{ robonomics_link }}"
+  tags:
+    - debug
+
+- debug:
+    msg: "{{ subkey_link }}"
+  tags:
+    - debug
+
+- name: Create data/uploads/common folder
+  file:
+    path: data/uploads/common
+    state: directory
+    mode: "0755"
+  tags:
+  - create
+
+- name: Create data/local folder
+  file:
+    path: data/local
+    state: directory
+    mode: "0755"
+  tags:
+  - create
+
+###############################
+### DOWNLOAD SUBKEY BINARY ####
+############################### 
+- get_url:                                                           
+    url: "{{ subkey_link[0] }}"                       
+    dest: assets/subkey.tar.gz
+  tags:
+    - create
+
+- name: Extract subkey binary to data/uploads
+  shell: /bin/tar -xf assets/subkey.tar.gz -C data/local
+  tags:
+    - create 
+
+- name: Remove file assets/subkey.tar.gz
+  file:
+    path: assets/subkey.tar.gz
+    state: absent
+  tags:
+    - create
+
+
+###############################
+# DOWNLOAD ROBONOMICS BINARY ##
+############################### 
+- name: Create data/uploads/common directory if it does not exist
+  file:
+    path: data/uploads/common
+    state: directory
+    mode: "0755"
+  tags:
+    - create
+
+- get_url:                                                           
+    url: "{{ robonomics_link[0] }}"                       
+    dest: assets/robonomics.tar.gz
+  tags:
+    - create
+
+- name: Extract robonomics binary to data/uploads
+  shell: /bin/tar -xf assets/robonomics.tar.gz -C data/uploads/common
+  tags:
+    - create 
+  
+- name: Remove file assets/robonomics.tar.gz
+  file:
+    path: assets/robonomics.tar.gz
+    state: absent
+  tags:
+    - create
