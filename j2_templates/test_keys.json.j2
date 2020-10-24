@@ -1,0 +1,10 @@
+{
+    "keys": 
+        {%- set lst = [] -%}
+        {% for result in test_keys.results -%} 
+            {% set key = {} -%}
+            {% set x = key.__setitem__(result.stdout_lines[-1].split(' ')[-1], result.stdout_lines[0].split('`')[1]) -%}
+            {% set lst = lst.append(key) -%}
+        {% endfor -%}
+        {{ lst | to_nice_json }}
+}

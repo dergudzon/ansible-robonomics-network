@@ -94,6 +94,11 @@
       tags:
         - create
 
+    - name: ==CREATE== Generate TEST_KEYS file
+      include_tasks: tasks/create_test_keys.yml
+      tags:
+        - test_keys_gen
+
 
 ###############################
 ############ UPLOAD ###########
@@ -129,6 +134,17 @@
       copy:
         src: data/uploads/common/robonomics.service
         dest: /etc/systemd/system/robonomics.service
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+      tags:
+        - create
+
+    - name: Copy TEST_KEYS file to every node
+      copy:
+        src: data/uploads/common/test_keys.json
+        dest: /root/test_keys.json
         owner: root
         group: root
         mode: '0644'
