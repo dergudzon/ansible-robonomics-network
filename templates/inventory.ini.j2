@@ -1,0 +1,13 @@
+[validators]
+{% for key, value in hostvars.items() -%}
+{% if 'validators' in hostvars[key]['group_names'] -%}
+{{ key }} do_id={{ hostvars[key]['do_id'] }}
+{% endif -%}
+{% endfor -%}
+
+[prometheus]
+{% for key, value in hostvars.items() -%}
+{% if 'prometheus' in hostvars[key]['group_names'] -%}
+{{ key }} do_id={{ hostvars[key]['do_id'] }}
+{% endif -%}
+{% endfor -%}

@@ -1,0 +1,27 @@
+###############################
+########### DESTROY ###########
+############################### 
+- hosts: all
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Remove all test nodes from DigitalOcean
+      community.digitalocean.digital_ocean_droplet:
+        name: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
+        id: "{{ hostvars[inventory_hostname]['do_id'] }}"
+        state: absent
+
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Recursively remove directory
+      file:
+        path: ./data
+        state: absent
+
+    # - name: Remove data folder
+    #   shell: /bin/rm -rf data       
+###############################
+########### /DESTROY ##########
+###############################

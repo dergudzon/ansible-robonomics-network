@@ -22,10 +22,10 @@ export DO_API_TOKEN=%API_TOKEN%
 ## Использование  
 ### Создать дроплеты и развернуть на них сеть Робономики
 ```
-ansible-playbook ./init.yml -e '@config.json' -t create
+ansible-playbook ./init.yml -e '@config.json'
 ```
   
-### Удалить созданные дроплеты  
+### Удалить созданные дроплеты
 ```
-ansible-playbook ./init.yml -e '@config.json' -t destroy
+ansible-playbook -i inventory.ini destroy.yml
 ```

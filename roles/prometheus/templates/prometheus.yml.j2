@@ -17,7 +17,7 @@ scrape_configs:
     static_configs:
       - targets: 
           {% set lst=[] -%}
-          {% for host in groups['do_robonomics'] -%}
+          {% for host in groups['validators'] -%}
               {% if inventory_hostname != host -%}
                 {% set lst = lst.append(host + ':9615') -%}
               {% endif -%}

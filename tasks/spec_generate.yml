@@ -59,38 +59,18 @@
     dest: ./data/local/keys/sudo/{{ validators.results[-1].stdout_lines[-1].split(' ')[-1] }}
     content: | 
       "{{ validators.results[-1].stdout_lines[0].split('`')[1] }}"
-  tags:
-    - create
-
-- debug:
-    msg: "{{ validators.results }}"
-  tags:
-    - debug
 
 - set_fact:
     validators_keys: "{{ validators_keys | default([]) + [item.stdout_lines[-1].split(' ')[-1]] }}"
   with_items: '{{ validators.results }}'
-  tags:
-    - create
-
-- debug:
-    msg: "{{ validators_keys }}"
-  tags:
-    - debug
 ###############################
 ####### /palletBalances  ######
 ###############################
-
-
 
 - name: Template a file to data/uploads/common/spec.json
   template:
     src: j2_templates/spec.json.j2
     dest: data/uploads/common/spec.json
-  tags:
-    - create
 
 - name: Copy robonomics.service to uploads/common
   copy: src=assets/robonomics.service dest=data/uploads/common/robonomics.service
-  tags:
-    - create

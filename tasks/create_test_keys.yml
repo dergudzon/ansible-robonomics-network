@@ -3,17 +3,8 @@
   shell: "{{ 'data/local/subkey generate' }}"
   with_sequence: count={{ config.common.test_keys_count }}
   register: test_keys
-  tags:
-    - create
-
-- debug:
-    msg: "{{ test_keys }}"
-  tags:
-    - debug 
 
 - name: Template test_keys to data/uploads/common/test_keys.json
   template:
     src: j2_templates/test_keys.json.j2
     dest: data/uploads/common/test_keys.json
-  tags:
-    - create

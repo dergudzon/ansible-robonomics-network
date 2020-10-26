@@ -15,15 +15,6 @@
     - name: Generate list of nodes names
       set_fact:
         validators_list: "{{ range(1, config.validators.validators_count + 1) | map('regex_replace', '(^.)', 'validator-\\1') | list }}"
-      tags:
-        - create
-        - destroy
-
-    - name: ==DEBUG== Show nodes names list for creating in DigitalOcean (validators_list)
-      debug:
-        msg: "{{ validators_list }}"
-      tags:
-        - debug
       
     - name: Create DigitalOcean droplets 
       community.digitalocean.digital_ocean_droplet:
@@ -36,25 +27,16 @@
         ssh_keys: "{{ config.common.ssh_keys }}"
       register: created_droplets
       with_items: '{{ validators_list }}'
-      tags:
-        - create
-        - destroy
 
     - digital_ocean_tag:
         name: test_robonomics
         resource_id: "{{ item.data.droplet.id }}"
         state: present
       loop: "{{ created_droplets.results }}"
-      tags:
-        - create
-        - destroy
 
     - name: Add new droplet to host group
-      local_action: add_host hostname={{ item.data.ip_address }} groupname=do_robonomics do_id={{ item.data.droplet.id }}
+      local_action: add_host hostname={{ item.data.ip_address }} groupname=validators do_id={{ item.data.droplet.id }}
       loop: "{{ created_droplets.results }}"
-      tags:
-        - create
-        - destroy
   
     - name: Wait for port 22 to become available
       wait_for:
@@ -62,14 +44,9 @@
         port: 22
       loop:
         "{{ created_droplets.results }}"
-      tags:
-        - create
-        # - destroy
 
     - name: DOWNLOAD latest binaries
       include_tasks: tasks/download_latest_binaries.yml
-      tags:
-        - create
         
     - name: ==CREATE== Create keys and folders structure for every node
       include_tasks: tasks/generate_keystores.yml
@@ -77,20 +54,13 @@
         "{{ created_droplets.results }}"
       loop_control:
         loop_var: droplet
-      tags:
-        - create
 
     - name: ==DEBUG== Nodes keys
       debug:
         msg: "{{ nodes_session_keys }}"
-      tags:
-        - debug
-
     
     - name: ==CREATE== Generate SPEC file
       include_tasks: tasks/spec_generate.yml
-      tags:
-        - create
 
     - name: ==CREATE== Generate TEST_KEYS file
       include_tasks: tasks/create_test_keys.yml
@@ -101,7 +71,7 @@
 ###############################
 ############ UPLOAD ###########
 ###############################  
-- hosts: do_robonomics
+- hosts: validators
   user: root
   gather_facts: false
 
@@ -114,8 +84,6 @@
         group: root
         mode: '0644'
         backup: yes
-      tags:
-        - create
 
     - name: Copy BIN file to every node
       copy:
@@ -125,8 +93,6 @@
         group: root
         mode: u=rwx,g=rx,o=rx
         backup: yes
-      tags:
-        - create
 
     - name: Copy service file to every node
       copy:
@@ -136,8 +102,6 @@
         group: root
         mode: '0644'
         backup: yes
-      tags:
-        - create
 
     - name: Copy TEST_KEYS file to every node
       copy:
@@ -147,15 +111,11 @@
         group: root
         mode: '0644'
         backup: yes
-      tags:
-        - create
 
     - name: Creates directory /etc/substrate
       file:
         path: /etc/substrate
         state: directory
-      tags:
-        - create
 
     - name: Copy spec file to every node
       copy:
@@ -165,22 +125,16 @@
         group: root
         mode: '0644'
         backup: yes
-      tags:
-        - create
 
     - name: Enable service robonomics.service
       systemd:
         name: robonomics.service
         enabled: yes
-      tags:
-        - create
 
     - name: Start service robonomics.service
       systemd:
         name: robonomics.service
         state: started
-      tags:
-        - create
 ###############################
 ########### /UPLOAD ###########
 ###############################
@@ -192,39 +146,23 @@
   tasks:
     - name: ==CREATE== Create Prometheus server
       include_tasks: tasks/set_prometheus_server.yml
-      tags:
-        - create
+
+    # - name: Show unventory
+    #   debug: 
+    #     msg: '{{ hostvars }}'
+    #   tags:
+    #     - debug
+        
+    - name: config file
+      template:
+        src: inventory.ini.j2
+        dest: inventory.ini
+
 
 - hosts: prometheus
   user: root
   gather_facts: false
+
   roles:
     - prometheus
     - grafana
-  tags:
-    - create
-
-
-###############################
-########### DESTROY ###########
-############################### 
-- hosts: do_robonomics
-  connection: local
-  gather_facts: false
-
-  tasks:
-    - name: Remove all test nodes from DigitalOcean
-      community.digitalocean.digital_ocean_droplet:
-        name: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
-        id: "{{ hostvars[inventory_hostname]['do_id'] }}"
-        state: absent
-      tags:
-        - destroy
-
-    - name: Remove data folder
-      shell: /bin/rm -rf data
-      tags:
-        - destroy        
-###############################
-########### /DESTROY ##########
-###############################
