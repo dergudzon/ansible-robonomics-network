@@ -1,0 +1,26 @@
+- name: Install Grafana
+  apt:
+    deb: "https://dl.grafana.com/oss/release/grafana_{{ version }}_amd64.deb"  
+
+- name: ==DEBUG== Grafana
+  debug:
+    msg: "{{ hostvars[inventory_hostname] }}"
+
+
+- name: "Grafana configuration file copy"
+  template:
+    src: "grafana.conf.j2"
+    dest: /etc/grafana/grafana.ini
+  notify: event_restart_grafana
+
+- name: "Grafana server started"
+  service:
+    name: grafana-server
+    enabled: true
+    state: started
+
+- name: "Check if Grafana is accessible."
+  uri:
+    url: http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8080
+    method: GET
+    status_code: 200

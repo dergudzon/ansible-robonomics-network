@@ -1,0 +1,43 @@
+---
+- name: Create DigitalOcean droplet for Prometheus 
+  community.digitalocean.digital_ocean_droplet:
+    unique_name: yes
+    region: "{{ config.prometheus_server.droplet_region }}"
+    image: "{{ config.prometheus_server.droplet_image }}"
+    name: "{{ config.prometheus_server.name }}"
+    size_id: "{{ config.prometheus_server.droplet_size_id }}"
+    state: present
+    ssh_keys: "{{ config.common.ssh_keys }}"
+  register: prometheus_server
+  tags:
+    - create
+    - destroy
+
+- name: ==DEBUG== Prometheus server
+  debug:
+    msg: "{{ prometheus_server }}"
+  tags:
+    - debug
+
+
+- digital_ocean_tag:
+    name: test_robonomics
+    resource_id: "{{ prometheus_server.data.droplet.id }}"
+    state: present
+  tags:
+    - create
+    - destroy
+
+- name: Add new droplet to host group
+  local_action: add_host hostname={{ prometheus_server.data.ip_address }} groupname=prometheus do_id={{ prometheus_server.data.droplet.id }}
+  tags:
+    - create
+    - destroy
+
+- name: Wait for port 22 to become available
+  wait_for:
+    host: "{{ prometheus_server.data.ip_address }}"
+    port: 22
+  tags:
+    - create
+    # - destroy
