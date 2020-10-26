@@ -60,8 +60,6 @@
       wait_for:
         host: "{{ item.data.ip_address }}"
         port: 22
-      with_items: "{{ created_droplets.results }}"
-      delegate_to: "{{ item.data.ip_address }}"
       loop:
         "{{ created_droplets.results }}"
       tags:
@@ -187,6 +185,25 @@
 ########### /UPLOAD ###########
 ###############################
 
+- hosts: localhost
+  user: root
+  gather_facts: false
+
+  tasks:
+    - name: ==CREATE== Create Prometheus server
+      include_tasks: tasks/set_prometheus_server.yml
+      tags:
+        - create
+
+- hosts: prometheus
+  user: root
+  gather_facts: false
+  roles:
+    - prometheus
+    - grafana
+  tags:
+    - create
+
 
 ###############################
 ########### DESTROY ###########
@@ -208,26 +225,6 @@
       shell: /bin/rm -rf data
       tags:
         - destroy        
-
-    # - name: Clean upload/nodes path
-    #   shell: /bin/rm -rf data/uploads/nodes/*
-    #   tags:
-    #     - destroy
-
-    # - name: Clean local/keys/validators path
-    #   shell: /bin/rm -rf data/local/keys/validators/*
-    #   tags:
-    #     - destroy
-
-    # - name: Clean local/keys/sudo path
-    #   shell: /bin/rm -rf data/local/keys/sudo/*
-    #   tags:
-    #     - destroy
-
-    # - name: Clean data/uploads/common path
-    #   shell: /bin/rm -rf data/uploads/common/*
-    #   tags:
-    #     - destroy
 ###############################
 ########### /DESTROY ##########
 ###############################

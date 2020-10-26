@@ -15,7 +15,7 @@
     robonomics_link: |
       {% set r = [] %}
       {% for a in json_reponse.json.assets -%}
-      {% if 'robonomics-ubuntu' in a.browser_download_url -%}
+      {% if ('robonomics-ubuntu' in a.browser_download_url and 'x86_64' in a.browser_download_url) -%}
         {% set r = r.append(a.browser_download_url) -%}
       {% endif -%}
       {% endfor -%}  
@@ -23,7 +23,7 @@
     subkey_link: |
       {% set r = [] %}
       {% for a in json_reponse.json.assets -%}
-        {% if 'subkey-ubuntu' in a.browser_download_url -%}
+        {% if ('subkey-ubuntu' in a.browser_download_url and 'x86_64' in a.browser_download_url) -%}
           {% set r = r.append(a.browser_download_url) -%}
         {% endif -%}
       {% endfor -%}  
@@ -31,12 +31,14 @@
   tags:
     - create
 
-- debug:
+- name: Show robonomics bin url
+  debug:
     msg: "{{ robonomics_link }}"
   tags:
     - debug
 
-- debug:
+- name: Show subkey bin url
+  debug:
     msg: "{{ subkey_link }}"
   tags:
     - debug
