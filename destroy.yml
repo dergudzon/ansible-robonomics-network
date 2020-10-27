@@ -20,6 +20,11 @@
         path: ./data
         state: absent
 
+    - name: Remove inventory file
+      file:
+        path: inventory.ini
+        state: absent   
+
     # - name: Remove data folder
     #   shell: /bin/rm -rf data       
 ###############################

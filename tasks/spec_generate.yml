@@ -9,11 +9,6 @@
   register: bootNodes
   tags:
     - create
-
-- debug:
-    msg: "{{ bootNodes }}"
-  tags:
-    - debug_ext
 # ##############################
 # ######### /bootNodes  ########
 # ##############################
@@ -69,8 +64,5 @@
 
 - name: Template a file to data/uploads/common/spec.json
   template:
-    src: j2_templates/spec.json.j2
+    src: spec.json.j2
     dest: data/uploads/common/spec.json
-
-- name: Copy robonomics.service to uploads/common
-  copy: src=assets/robonomics.service dest=data/uploads/common/robonomics.service

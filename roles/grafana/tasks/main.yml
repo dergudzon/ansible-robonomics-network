@@ -19,3 +19,8 @@
     url: http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8080
     method: GET
     status_code: 200
+
+- name: Change Grafana admin password
+  shell: grafana-cli admin reset-admin-password {{ config.grafana_server.admin_password }}
+  args:
+    warn: no

@@ -1,0 +1,9 @@
+- name: Restart robonomics service
+  service:
+    name: robonomics
+    state: restarted
+  listen: event_restart_robonomics
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+  listen: systemd_reload

@@ -22,10 +22,6 @@
       {% endfor -%}  
       {{ r }}
 
-- name: Show subkey bin url
-  debug:
-    msg: "{{ subkey_link }}"
-
 - name: Create data/uploads/common folder
   file:
     path: data/uploads/common
@@ -41,16 +37,19 @@
 ###############################
 ### DOWNLOAD SUBKEY BINARY ####
 ############################### 
+- debug:
+    msg: "{{ subkey_link[0] }}"
+
 - get_url:                                                           
     url: "{{ subkey_link[0] }}"                       
-    dest: assets/subkey.tar.gz
+    dest: tmp/subkey.tar.gz
 
 - name: Extract subkey binary to data/uploads
-  shell: /bin/tar -xf assets/subkey.tar.gz -C data/local
+  shell: /bin/tar -xf tmp/subkey.tar.gz -C data/local
 
-- name: Remove file assets/subkey.tar.gz
+- name: Remove file tmp/subkey.tar.gz
   file:
-    path: assets/subkey.tar.gz
+    path: tmp/subkey.tar.gz
     state: absent
 
 ###############################
@@ -64,12 +63,12 @@
 
 - get_url:                                                           
     url: "{{ robonomics_link[0] }}"                       
-    dest: assets/robonomics.tar.gz
+    dest: tmp/robonomics.tar.gz
 
 - name: Extract robonomics binary to data/uploads
-  shell: /bin/tar -xf assets/robonomics.tar.gz -C data/uploads/common 
+  shell: /bin/tar -xf tmp/robonomics.tar.gz -C data/uploads/common 
   
-- name: Remove file assets/robonomics.tar.gz
+- name: Remove file tmp/robonomics.tar.gz
   file:
-    path: assets/robonomics.tar.gz
+    path: tmp/robonomics.tar.gz
     state: absent

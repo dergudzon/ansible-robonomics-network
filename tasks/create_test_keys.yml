@@ -6,5 +6,5 @@
 
 - name: Template test_keys to data/uploads/common/test_keys.json
   template:
-    src: j2_templates/test_keys.json.j2
+    src: test_keys.json.j2
     dest: data/uploads/common/test_keys.json

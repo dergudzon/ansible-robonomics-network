@@ -1,0 +1,53 @@
+- name: Copy created node files to every node
+  copy:
+    src: data/uploads/nodes/{{ hostvars[inventory_hostname]['inventory_hostname'] }}/
+    dest: /root/.local/share/robonomics/chains/dev/
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+
+- name: Copy BIN file to every node
+  copy:
+    src: data/uploads/common/robonomics
+    dest: /usr/bin/robonomics
+    owner: root
+    group: root
+    mode: u=rwx,g=rx,o=rx
+    backup: yes
+
+- name: Copy TEST_KEYS file to every node
+  copy:
+    src: data/uploads/common/test_keys.json
+    dest: /root/test_keys.json
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+
+- name: Creates directory /etc/substrate
+  file:
+    path: /etc/substrate
+    state: directory
+
+- name: Copy spec file to every node
+  copy:
+    src: data/uploads/common/spec.json
+    dest: /etc/substrate/spec.json
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+
+
+- name: Copy systemd init file
+  template:
+    src: service.j2
+    dest: /etc/systemd/system/robonomics.service
+  notify: systemd_reload
+
+- name: Start robonomics service
+  service:
+    name: robonomics
+    state: started
+    enabled: yes
