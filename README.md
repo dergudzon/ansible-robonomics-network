@@ -2,6 +2,14 @@
 
 ## Требуется
 - Установить **Ansible**
+- Установить модуль digital ocean для ansible:  
+```
+ansible-galaxy collection install community.digitalocean
+```
+- Установить модуль grafana для ansible:
+```
+ansible-galaxy collection install community.grafana
+```
 - Создать аккаунт в DigitalOcean
 - Добавить свой id_rsa.pub в DigitalOcean
 - Создать в интерфейсе DigitalOcean новый API_TOKEN и скопировать его.  

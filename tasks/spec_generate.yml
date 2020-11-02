@@ -18,7 +18,7 @@
 # ###### palletBalances  #######
 # ##############################
 - name: Create validators keys
-  shell: data/local/subkey generate
+  shell: data/local/subkey -n robonomics generate
   with_sequence: count={{ created_droplets.results|length + 1}}
   register: validators
   tags:

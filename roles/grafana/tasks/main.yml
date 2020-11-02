@@ -1,4 +1,4 @@
-- name: Install Grafana
+- name: "Install Grafana"
   apt:
     deb: "https://dl.grafana.com/oss/release/grafana_{{ version }}_amd64.deb"  
 
@@ -7,6 +7,12 @@
     src: "grafana.conf.j2"
     dest: /etc/grafana/grafana.ini
   notify: event_restart_grafana
+
+# - name: Grafana prometheus data source file copy
+#   template:
+#     src: "local_prometheus.yaml.j2"
+#     dest: /etc/grafana/provisioning/datasources/local_prometheus.yaml
+#   notify: event_restart_grafana
 
 - name: "Grafana server started"
   service:
@@ -20,7 +26,36 @@
     method: GET
     status_code: 200
 
-- name: Change Grafana admin password
+- name: "Change Grafana admin password"
   shell: grafana-cli admin reset-admin-password {{ config.grafana_server.admin_password }}
   args:
     warn: no
+
+- name: "Create prometheus datasource"
+  community.grafana.grafana_datasource:
+    name: "{{ grafana_prometeus_ds_name }}"
+    grafana_url: http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8080
+    grafana_user: "admin"
+    grafana_password: "{{ config.grafana_server.admin_password }}"
+    ds_type: prometheus
+    ds_url: http://localhost:9090
+    access: proxy
+
+- name: "Grafana dashboard file copy"
+  template:
+    src: "dashboard.json.j2"
+    dest: /root/dashboard.json
+  notify: event_restart_grafana
+
+- name: "Import Grafana dashboard"
+  community.grafana.grafana_dashboard:
+    grafana_url: http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8080
+    # grafana_api_key: "{{ grafana_api_key }}"
+    grafana_user: "admin"
+    grafana_password: "{{ config.grafana_server.admin_password }}"
+    state: present
+    commit_message: Updated by ansible
+    overwrite: yes
+    path: /root/dashboard.json
+  # notify: event_restart_grafana
+

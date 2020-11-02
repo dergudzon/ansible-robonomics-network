@@ -37,9 +37,6 @@
 ###############################
 ### DOWNLOAD SUBKEY BINARY ####
 ############################### 
-- debug:
-    msg: "{{ subkey_link[0] }}"
-
 - get_url:                                                           
     url: "{{ subkey_link[0] }}"                       
     dest: tmp/subkey.tar.gz

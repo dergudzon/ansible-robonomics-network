@@ -1,6 +1,6 @@
 ---
 - name: Generate test keys
-  shell: "{{ 'data/local/subkey generate' }}"
+  shell: "{{ 'data/local/subkey -n robonomics generate' }}"
   with_sequence: count={{ config.common.test_keys_count }}
   register: test_keys
 
