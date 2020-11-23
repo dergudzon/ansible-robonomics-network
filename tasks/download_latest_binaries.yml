@@ -34,6 +34,12 @@
     state: directory
     mode: "0755"
 
+- name: Create ./tmp folder
+  file:
+    path: tmp
+    state: directory
+    mode: "0755"
+
 ###############################
 ### DOWNLOAD SUBKEY BINARY ####
 ############################### 
@@ -49,22 +55,23 @@
     path: tmp/subkey.tar.gz
     state: absent
 
-###############################
-# DOWNLOAD ROBONOMICS BINARY ##
-############################### 
+################################
+## DOWNLOAD ROBONOMICS BINARY ##
+################################
 - name: Create data/uploads/common directory if it does not exist
   file:
     path: data/uploads/common
     state: directory
     mode: "0755"
 
-- get_url:                                                           
+- name: Get ROBONOMICS binary archive
+  get_url:                                                           
     url: "{{ robonomics_link[0] }}"                       
     dest: tmp/robonomics.tar.gz
 
 - name: Extract robonomics binary to data/uploads
   shell: /bin/tar -xf tmp/robonomics.tar.gz -C data/uploads/common 
-  
+
 - name: Remove file tmp/robonomics.tar.gz
   file:
     path: tmp/robonomics.tar.gz

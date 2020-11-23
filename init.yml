@@ -12,57 +12,40 @@
 
 
   tasks:
-    - name: Generate list of nodes names
-      set_fact:
-        validators_list: "{{ range(1, config.validators.validators_count + 1) | map('regex_replace', '(^.)', 'validator-\\1') | list }}"
-      
-    - name: Create DigitalOcean droplets 
-      community.digitalocean.digital_ocean_droplet:
-        unique_name: yes
-        region: "{{ config.validators.droplet_region }}"
-        image: "{{ config.validators.droplet_image }}"
-        name: "{{ item }}"
-        size_id: "{{ config.validators.droplet_size_id }}"
-        state: present
-        ssh_keys: "{{ config.common.ssh_keys }}"
-      register: created_droplets
-      with_items: '{{ validators_list }}'
+    - name: ==CREATE SERVERS== Validators
+      include_tasks: tasks/create_validators_servers.yml
 
-    - digital_ocean_tag:
-        name: test_robonomics
-        resource_id: "{{ item.data.droplet.id }}"
-        state: present
-      loop: "{{ created_droplets.results }}"
+    - name: ==CREATE SERVERS== Common Nodes
+      include_tasks: tasks/create_common_nodes_servers.yml
 
-    - name: Add new droplet to host group
-      local_action: add_host hostname={{ item.data.ip_address }} groupname=validators do_id={{ item.data.droplet.id }}
-      loop: "{{ created_droplets.results }}"
-  
-    - name: Wait for port 22 to become available
-      wait_for:
-        host: "{{ item.data.ip_address }}"
-        port: 22
-      loop:
-        "{{ created_droplets.results }}"
+    - name:  ==CREATE SERVERS== Prometheus
+      include_tasks: tasks/create_prometheus_server.yml
+
+    - name: Template Inventory to inventory.ini
+      template:
+        src: inventory.ini.j2
+        dest: inventory.ini
 
     - name: DOWNLOAD latest binaries
       include_tasks: tasks/download_latest_binaries.yml
-        
-    - name: ==CREATE== Create keys and folders structure for every node
+
+    - name: Create keys and folders structure for every node
       include_tasks: tasks/generate_keystores.yml
       loop: 
-        "{{ created_droplets.results }}"
+        "{{ created_validators_servers.results }}"
       loop_control:
         loop_var: droplet
-    
-    - name: ==CREATE== Generate SPEC file
-      include_tasks: tasks/spec_generate.yml
 
-    - name: ==CREATE== Generate TEST_KEYS file
+    - name: Create TEST_KEYS file
       include_tasks: tasks/create_test_keys.yml
+      loop: 
+        "{{ created_common_nodes.results }}"
+      loop_control:
+        loop_var: common_node
+    
 
-    - name: ==CREATE== Create Prometheus server
-      include_tasks: tasks/set_prometheus_server.yml
+    - name: Generate SPEC file
+      include_tasks: tasks/spec_generate.yml
 
     # - name: Show unventory
     #   debug: 
@@ -70,11 +53,6 @@
     #   tags:
     #     - debug
         
-    - name: config file
-      template:
-        src: inventory.ini.j2
-        dest: inventory.ini
-
 
 - hosts: validators
   user: root
@@ -82,9 +60,15 @@
   roles:
     - validator
 
+- hosts: common-nodes
+  user: root
+  gather_facts: false
+  roles:
+    - common-node
+
 - hosts: prometheus
   user: root
   gather_facts: false
   roles:
-    - prometheus
-    - grafana
+    - { role: 'prometheus', tags: 'prometheus'}
+    - { role: 'grafana', tags: 'grafana'}

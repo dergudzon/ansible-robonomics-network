@@ -1,0 +1,140 @@
+- name: Update apt-get repo and cache
+  apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+
+# - name: Upgrade all apt packages
+#   apt: upgrade=dist force_apt_get=yes
+
+# - name: Check if a reboot is needed for Debian and Ubuntu boxes
+#   register: reboot_required_file
+#   stat: path=/var/run/reboot-required get_md5=no
+
+# - name: Reboot the Debian or Ubuntu server
+#   reboot:
+#     msg: "Reboot initiated by Ansible due to kernel updates"
+#     connect_timeout: 5
+#     reboot_timeout: 300
+#     pre_reboot_delay: 0
+#     post_reboot_delay: 30
+#     test_command: uptime
+#   when: reboot_required_file.stat.exists
+
+- name: Get NodeJS
+  shell: "curl -sL https://deb.nodesource.com/setup_14.x | bash"
+
+- name: APT INSTALL nodejs, python3-pip, unzip
+  apt: name={{ item }} state=present
+  loop:
+    - nodejs
+    - python3-pip
+    - unzip
+
+- name: Install pandas, numpy
+  pip: name={{ item }} executable=pip3
+  loop:
+    - pandas
+    - numpy
+    - substrate-interface
+
+- name: Copy api_explorer.zip to common node
+  copy:
+    src: files/api_explorer.zip
+    dest: /root/api_explorer.zip
+    owner: root
+    group: root
+    mode: u=rwx,g=rx,o=rx
+    backup: yes
+
+- name: Unarchive api_explorer.zip
+  unarchive:
+    src: api_explorer.zip
+    dest: /root/
+
+
+- name: Install packages based on package.json.
+  npm:
+    path: /root
+
+- name: NODE | Install npm deps
+  shell: npm run build
+  register: npm_finished
+  failed_when: '"ERR!" in npm_finished.stderr'
+
+- name: Copy BIN file to every node
+  copy:
+    src: data/uploads/common/robonomics
+    dest: /usr/bin/robonomics
+    owner: root
+    group: root
+    mode: u=rwx,g=rx,o=rx
+    backup: yes
+
+- name: Copy TEST_KEYS file to every node
+  copy:
+    src: data/uploads/common_nodes/{{ hostvars[inventory_hostname]['inventory_hostname'] }}/test_keys.json
+    dest: /root/test_keys.json
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+
+- name: Copy DATALOG cli script file to every node
+  copy:
+    src: files/send_datalog_cli.py
+    dest: /root/send_datalog_cli.py
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+
+- name: Copy DATALOG api script file to every node
+  copy:
+    src: files/send_datalog_api.py
+    dest: /root/send_datalog_api.py
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+
+- name: Copy 
+  copy:
+    src: files/get_block_info.py
+    dest: /root/get_block_info.py
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+
+- name: Copy COUNT_TRANSACTIONS script file to every node
+  copy:
+    src: files/count_transactions.py
+    dest: /root/count_transactions.py
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+
+- name: Creates directory /etc/substrate
+  file:
+    path: /etc/substrate
+    state: directory
+
+- name: Copy spec file to every node
+  copy:
+    src: data/uploads/common/spec.json
+    dest: /etc/substrate/spec.json
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+
+- name: Copy systemd init file
+  template:
+    src: robonomics.service.j2
+    dest: /etc/systemd/system/robonomics.service
+  notify: systemd_reload
+
+- name: Start robonomics service
+  service:
+    name: robonomics
+    state: started
+    enabled: yes

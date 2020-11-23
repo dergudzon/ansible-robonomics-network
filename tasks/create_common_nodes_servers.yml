@@ -1,0 +1,34 @@
+---
+- name: Generate list of common nodes names
+  set_fact:
+    common_nodes_list: "{{ range(1, config.common_nodes.count + 1) | map('regex_replace', '(^.)', 'common-node-\\1') | list }}"
+
+- name: Create DigitalOcean droplets 
+  community.digitalocean.digital_ocean_droplet:
+    unique_name: yes
+    region: "{{ config.common_nodes.droplet_region }}"
+    image: "{{ config.common_nodes.droplet_image }}"
+    name: "{{ item }}"
+    size_id: "{{ config.common_nodes.droplet_size_id }}"
+    state: present
+    ssh_keys: "{{ config.common.ssh_keys }}"
+  register: created_common_nodes
+  with_items: '{{ common_nodes_list }}'
+
+- name: Set DO tag for created COMMON nodes
+  digital_ocean_tag:
+    name: test_robonomics
+    resource_id: "{{ item.data.droplet.id }}"
+    state: present
+  loop: "{{ created_common_nodes.results }}"
+
+- name: Add new droplet to host group
+  local_action: add_host hostname={{ item.data.ip_address }} groupname=common-nodes do_id={{ item.data.droplet.id }}
+  loop: "{{ created_common_nodes.results }}"
+
+- name: Wait for port 22 to become available
+  wait_for:
+    host: "{{ item.data.ip_address }}"
+    port: 22
+  loop:
+    "{{ created_common_nodes.results }}"

@@ -11,3 +11,10 @@
 {{ key }} do_id={{ hostvars[key]['do_id'] }}
 {% endif -%}
 {% endfor -%}
+
+[common-nodes]
+{% for key, value in hostvars.items() -%}
+{% if 'common-nodes' in hostvars[key]['group_names'] -%}
+{{ key }} do_id={{ hostvars[key]['do_id'] }}
+{% endif -%}
+{% endfor -%}

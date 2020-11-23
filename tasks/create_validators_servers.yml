@@ -1,0 +1,34 @@
+---
+- name: Generate list of validators nodes names
+  set_fact:
+    validators_list: "{{ range(1, config.validators.count + 1) | map('regex_replace', '(^.)', 'validator-\\1') | list }}"
+  
+- name: Create DigitalOcean droplets for VALIDATORS
+  community.digitalocean.digital_ocean_droplet:
+    unique_name: yes
+    region: "{{ config.validators.droplet_region }}"
+    image: "{{ config.validators.droplet_image }}"
+    name: "{{ item }}"
+    size_id: "{{ config.validators.droplet_size_id }}"
+    state: present
+    ssh_keys: "{{ config.common.ssh_keys }}"
+  register: created_validators_servers
+  with_items: '{{ validators_list }}'
+
+- name: Set DO tag for created VALIDATORS 
+  digital_ocean_tag:
+    name: test_robonomics
+    resource_id: "{{ item.data.droplet.id }}"
+    state: present
+  loop: "{{ created_validators_servers.results }}"
+
+- name: Add new droplet to host group
+  local_action: add_host hostname={{ item.data.ip_address }} groupname=validators do_id={{ item.data.droplet.id }}
+  loop: "{{ created_validators_servers.results }}"
+
+- name: Wait for port 22 to become available
+  wait_for:
+    host: "{{ item.data.ip_address }}"
+    port: 22
+  loop:
+    "{{ created_validators_servers.results }}"

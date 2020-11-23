@@ -1,5 +1,5 @@
 - name: Creating prometheus user group
-  group: name="{{groupId}}"
+  group: name="{{ groupId }}"
   become: true
 
 - name: Creating prometheus user

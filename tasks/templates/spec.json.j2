@@ -34,6 +34,12 @@
             },
             "palletBalances": {
                 "balances": {% set lst = [] -%}
+                            {% for k in all_test_keys -%}
+                                {% for key, value in k.items() -%}
+                                    {% set lst_item = [key, 1000000000000000000] -%}
+                                    {% set lst = lst.append(lst_item) -%}
+                                {% endfor -%}
+                            {% endfor -%}
                             {% for k in validators_keys -%}
                                 {% set lst_item = [k, 1000000000000000000] -%}
                                 {% set lst = lst.append(lst_item) -%}

@@ -1,10 +1,16 @@
 ---
-- name: Generate test keys
-  shell: "{{ 'data/local/subkey -n robonomics generate' }}"
-  with_sequence: count={{ config.common.test_keys_count }}
-  register: test_keys
+- name: Create directory for test_keys.json if it doesn't exists
+  file:
+    path: data/uploads/common_nodes/{{ common_node.data.ip_address }}
+    state: directory
+    mode: "0755"
 
-- name: Template test_keys to data/uploads/common/test_keys.json
-  template:
-    src: test_keys.json.j2
-    dest: data/uploads/common/test_keys.json
+- name: Run handlers/generate_addresses.py
+  script: handlers/generate_addresses.py -p data/uploads/common_nodes/{{ common_node.data.ip_address }}/test_keys.json -c {{ config.common_nodes.test_keys_count }}
+
+- set_fact:
+    test_keys: "{{ lookup('file','data/uploads/common_nodes/{{ common_node.data.ip_address }}/test_keys.json') | from_json }}"
+
+- name: Set ALL_TEST_KEYS var
+  set_fact:
+    all_test_keys: "{{ all_test_keys | default([]) + test_keys['keys'] }}"

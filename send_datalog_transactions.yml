@@ -1,0 +1,9 @@
+---
+- hosts: common-nodes
+  user: root
+  gather_facts: false
+
+  tasks:
+    - shell: python3 send_datalog_cli.py -t test_keys.json
+      async: 3600
+      poll: 0

@@ -1,0 +1,27 @@
+---
+- hosts: 
+    - validators
+    - common-nodes
+  # connection: local
+  user: root
+  gather_facts: false
+
+  tasks:
+    - name: Clear local DB folder
+      file:
+        state: absent
+        path: "/root/.local/share/robonomics/chains/dev/db/"
+
+    - name: Stop robonomics service
+      service:
+        name: robonomics
+        state: stopped
+
+    - copy: 
+        src: robonomics
+        dest: /usr/bin/robonomics
+
+    - name: Restart robonomics service
+      service:
+        name: robonomics
+        state: restarted

@@ -1,14 +1,20 @@
 {
     "config": {
         "common": {
-            "ssh_keys": [],
-            "test_keys_count": 10
+            "ssh_keys": []
         },
         "validators": {
-            "validators_count": 2,
+            "`count": 2,
             "droplet_image": "ubuntu-20-04-x64",
             "droplet_region": "ams3",
             "droplet_size_id": "s-1vcpu-1gb"
+        },
+        "common_nodes": {
+            "count": 1,
+            "droplet_image": "ubuntu-20-04-x64",
+            "droplet_region": "ams3",
+            "droplet_size_id": "s-1vcpu-1gb",
+            "test_keys_count": 10
         },
         "prometheus_server": {
             "name": "prometheus",
