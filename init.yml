@@ -20,6 +20,7 @@
 
     - name:  ==CREATE SERVERS== Prometheus
       include_tasks: tasks/create_prometheus_server.yml
+      when: config.prometheus_server is defined
 
     - name: Template Inventory to inventory.ini
       template:

@@ -33,7 +33,6 @@
   loop:
     - pandas
     - numpy
-    - substrate-interface
 
 - name: Copy api_explorer.zip to common node
   copy:
@@ -81,15 +80,6 @@
   copy:
     src: files/send_datalog_cli.py
     dest: /root/send_datalog_cli.py
-    owner: root
-    group: root
-    mode: '0644'
-    backup: yes
-
-- name: Copy DATALOG api script file to every node
-  copy:
-    src: files/send_datalog_api.py
-    dest: /root/send_datalog_api.py
     owner: root
     group: root
     mode: '0644'

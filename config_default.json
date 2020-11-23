@@ -4,7 +4,7 @@
             "ssh_keys": []
         },
         "validators": {
-            "`count": 2,
+            "count": 2,
             "droplet_image": "ubuntu-20-04-x64",
             "droplet_region": "ams3",
             "droplet_size_id": "s-1vcpu-1gb"

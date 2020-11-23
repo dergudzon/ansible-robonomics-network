@@ -17,9 +17,9 @@
 ###############################
 ####### palletBalances  #######
 ###############################
-- name: Create validators keys
-  # shell: data/local/subkey -n robonomics generate
-  shell: data/local/subkey generate
+- name: Create validators & sudo keys
+  shell: data/local/subkey -n robonomics generate
+  # shell: data/local/subkey generate
   with_sequence: count={{ created_validators_servers.results|length + 1}}
   register: validators
   tags:
