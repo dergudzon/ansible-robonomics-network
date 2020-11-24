@@ -8,7 +8,7 @@ Group=root
 Type=users
 WorkingDirectory=/root
 Restart=on-failure
-ExecStart=/usr/bin/robonomics --prometheus-external --chain /etc/substrate/spec.json --name ${HOSTNAME} --validator
+ExecStart=/usr/bin/robonomics --rpc-cors all --prometheus-external --chain /etc/substrate/spec.json --name ${HOSTNAME} --validator
 
 [Install]
 WantedBy=multi-user.target
