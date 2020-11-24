@@ -7,20 +7,20 @@
             "count": 2,
             "droplet_image": "ubuntu-20-04-x64",
             "droplet_region": "ams3",
-            "droplet_size_id": "s-1vcpu-1gb"
+            "droplet_size_id": "s-2vcpu-2gb"
         },
         "common_nodes": {
             "count": 1,
             "droplet_image": "ubuntu-20-04-x64",
             "droplet_region": "ams3",
-            "droplet_size_id": "s-1vcpu-1gb",
+            "droplet_size_id": "s-2vcpu-2gb",
             "test_keys_count": 10
         },
         "prometheus_server": {
             "name": "prometheus",
             "droplet_image": "ubuntu-20-04-x64",
             "droplet_region": "ams3",
-            "droplet_size_id": "s-1vcpu-1gb"
+            "droplet_size_id": "s-2vcpu-2gb"
         },
         "grafana_server": {
             "admin_password": "rN96DKY3XszY"
